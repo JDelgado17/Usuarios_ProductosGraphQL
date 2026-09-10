@@ -1,0 +1,42 @@
+$kind: http-request
+description: Crea un usuario nuevo y guarda su id en la variable de colección {{userId}} para las siguientes pruebas.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation CreateUser($input: UserInput!) {\r
+
+      \  createUser(input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Laura Gómez\",\r
+
+      \    \"email\": \"laura@example.com\"\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El usuario fue creado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.createUser.id).to.exist;
+        pm.collectionVariables.set('userId', body.data.createUser.id);
+      });
+    language: text/javascript
+order: 3000

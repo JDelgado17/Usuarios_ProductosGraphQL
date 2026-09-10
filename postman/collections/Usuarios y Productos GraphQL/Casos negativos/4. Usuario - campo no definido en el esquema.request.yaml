@@ -1,0 +1,32 @@
+$kind: http-request
+description: El campo 'phone' no existe en el tipo User. GraphQL debe rechazar la validacion antes de ejecutar el resolutor.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "query CampoInvalido {\r
+
+      \  users {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \    phone\r
+
+      \  }\r
+
+      }"
+    variables: "{}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('GraphQL rechaza el campo inexistente', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.exist;
+      });
+    language: text/javascript
+order: 4000

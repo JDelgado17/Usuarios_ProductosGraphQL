@@ -1,0 +1,29 @@
+$kind: http-request
+description: Elimina el producto creado. Después, ejecuta 'Buscar producto' con este mismo id y confirma que data.product es null.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation DeleteProduct($id: ID!) {\r
+
+      \  deleteProduct(id: $id) {\r
+
+      \    success\r
+
+      \    message\r
+
+      \  }\r
+
+      }"
+    variables: "{\r\n  \"id\": \"{{productId}}\"\r\n}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El producto fue eliminado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.deleteProduct.success).to.eql(true);
+      });
+    language: text/javascript
+order: 5000

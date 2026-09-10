@@ -1,0 +1,46 @@
+$kind: http-request
+description: El precio debe ser mayor que cero segun los criterios de aceptacion de la actividad de transferencia.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation CreateProduct($input: ProductInput!) {\r
+
+      \  createProduct(input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    price\r
+
+      \    stock\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Producto invalido\",\r
+
+      \    \"description\": \"precio en 0\",\r
+
+      \    \"price\": 0,\r
+
+      \    \"stock\": 5\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La operacion responde con errors', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.exist;
+      });
+    language: text/javascript
+order: 5000

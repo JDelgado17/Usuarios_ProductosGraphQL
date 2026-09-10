@@ -1,0 +1,29 @@
+$kind: http-request
+description: Elimina el usuario creado. Después, ejecuta 'Buscar usuario' con este mismo id y confirma que data.user es null.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation DeleteUser($id: ID!) {\r
+
+      \  deleteUser(id: $id) {\r
+
+      \    success\r
+
+      \    message\r
+
+      \  }\r
+
+      }"
+    variables: "{\r\n  \"id\": \"{{userId}}\"\r\n}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El usuario fue eliminado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.deleteUser.success).to.eql(true);
+      });
+    language: text/javascript
+order: 5000

@@ -1,0 +1,43 @@
+$kind: http-request
+description: Usa el id generado en 'Crear usuario' (variable {{userId}}).
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation UpdateUser($id: ID!, $input: UserInput!) {\r
+
+      \  updateUser(id: $id, input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"id\": \"{{userId}}\",\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Laura Gómez Ruiz\",\r
+
+      \    \"email\": \"laura.ruiz@example.com\"\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El usuario fue actualizado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.updateUser.name).to.eql('Laura Gómez Ruiz');
+      });
+    language: text/javascript
+order: 4000

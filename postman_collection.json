@@ -1,0 +1,734 @@
+{
+  "info": {
+    "name": "Usuarios y Productos GraphQL",
+    "description": "Coleccion de pruebas CRUD (GraphQL + MySQL) para el microservicio usuarios-productos-graphql. Incluye operaciones de Usuarios, Productos y 6 casos negativos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Verifica que el servidor este arriba y respondiendo antes de probar GraphQL."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('El servicio esta activo', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('ok');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "1. Listar usuarios",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListUsers {\n  users { id name email }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Devuelve la lista completa de usuarios almacenados en MySQL."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La respuesta HTTP es exitosa', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('No contiene errores GraphQL', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "});",
+                  "pm.test('users es un arreglo', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data.users).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Buscar usuario por id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetUser($id: ID!) {\n  user(id: $id) { id name email }\n}",
+                "variables": "{\n  \"id\": \"1\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Busca un usuario existente por id. Cambia la variable 'id' para probar otros casos."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La respuesta HTTP es exitosa', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('No contiene errores GraphQL', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "});",
+                  "pm.test('El usuario existe', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data.user).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateUser($input: UserInput!) {\n  createUser(input: $input) { id name email }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Laura Gómez\",\n    \"email\": \"laura@example.com\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Crea un usuario nuevo y guarda su id en la variable de colección {{userId}} para las siguientes pruebas."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario fue creado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.createUser.id).to.exist;",
+                  "  pm.collectionVariables.set('userId', body.data.createUser.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Actualizar usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateUser($id: ID!, $input: UserInput!) {\n  updateUser(id: $id, input: $input) { id name email }\n}",
+                "variables": "{\n  \"id\": \"{{userId}}\",\n  \"input\": {\n    \"name\": \"Laura Gómez Ruiz\",\n    \"email\": \"laura.ruiz@example.com\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Usa el id generado en 'Crear usuario' (variable {{userId}})."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario fue actualizado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.updateUser.name).to.eql('Laura Gómez Ruiz');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Eliminar usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteUser($id: ID!) {\n  deleteUser(id: $id) { success message }\n}",
+                "variables": "{\n  \"id\": \"{{userId}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Elimina el usuario creado. Después, ejecuta 'Buscar usuario' con este mismo id y confirma que data.user es null."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El usuario fue eliminado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.deleteUser.success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "1. Listar productos",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListProducts {\n  products { id name description price stock }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Devuelve la lista completa de productos (actividad de transferencia)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La respuesta HTTP es exitosa', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('No contiene errores GraphQL', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "});",
+                  "pm.test('products es un arreglo', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data.products).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Buscar producto por id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetProduct($id: ID!) {\n  product(id: $id) { id name description price stock }\n}",
+                "variables": "{\n  \"id\": \"1\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Busca un producto existente por id."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La respuesta HTTP es exitosa', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('No contiene errores GraphQL', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "});",
+                  "pm.test('El producto existe', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data.product).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateProduct($input: ProductInput!) {\n  createProduct(input: $input) { id name description price stock }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Monitor 24 pulgadas\",\n    \"description\": \"Panel IPS Full HD\",\n    \"price\": 480000,\n    \"stock\": 10\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Crea un producto nuevo y guarda su id en la variable de colección {{productId}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El producto fue creado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.createProduct.id).to.exist;",
+                  "  pm.collectionVariables.set('productId', body.data.createProduct.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Actualizar producto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateProduct($id: ID!, $input: ProductInput!) {\n  updateProduct(id: $id, input: $input) { id name description price stock }\n}",
+                "variables": "{\n  \"id\": \"{{productId}}\",\n  \"input\": {\n    \"name\": \"Monitor 24 pulgadas IPS\",\n    \"description\": \"Panel IPS Full HD 75Hz\",\n    \"price\": 499000,\n    \"stock\": 7\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Usa el id generado en 'Crear producto' (variable {{productId}})."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El producto fue actualizado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.updateProduct.stock).to.eql(7);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Eliminar producto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteProduct($id: ID!) {\n  deleteProduct(id: $id) { success message }\n}",
+                "variables": "{\n  \"id\": \"{{productId}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Elimina el producto creado. Después, ejecuta 'Buscar producto' con este mismo id y confirma que data.product es null."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El producto fue eliminado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.equal(undefined);",
+                  "  pm.expect(body.data.deleteProduct.success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Casos negativos",
+      "item": [
+        {
+          "name": "1. Usuario - correo repetido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateUser($input: UserInput!) {\n  createUser(input: $input) { id name email }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Otro usuario\",\n    \"email\": \"ana@example.com\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "El correo ana@example.com ya existe (dato semilla de database.sql). Debe fallar por restriccion UNIQUE."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La operacion responde con errors', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Usuario - id inexistente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateUser($id: ID!, $input: UserInput!) {\n  updateUser(id: $id, input: $input) { id name email }\n}",
+                "variables": "{\n  \"id\": \"9999\",\n  \"input\": {\n    \"name\": \"No existe\",\n    \"email\": \"noexiste@example.com\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Intenta actualizar un id que no existe en la tabla users."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La operacion responde con errors', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Usuario - nombre vacio",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateUser($input: UserInput!) {\n  createUser(input: $input) { id name email }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"   \",\n    \"email\": \"vacio@example.com\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "El campo name llega con solo espacios; el resolutor debe rechazarlo antes de insertar."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La operacion responde con errors', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Usuario - campo no definido en el esquema",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query CampoInvalido {\n  users { id name email phone }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "El campo 'phone' no existe en el tipo User. GraphQL debe rechazar la validacion antes de ejecutar el resolutor."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GraphQL rechaza el campo inexistente', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Producto - precio invalido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateProduct($input: ProductInput!) {\n  createProduct(input: $input) { id name price stock }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Producto invalido\",\n    \"description\": \"precio en 0\",\n    \"price\": 0,\n    \"stock\": 5\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "El precio debe ser mayor que cero segun los criterios de aceptacion de la actividad de transferencia."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La operacion responde con errors', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Producto - stock negativo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateProduct($input: ProductInput!) {\n  createProduct(input: $input) { id name price stock }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"Producto invalido 2\",\n    \"description\": \"stock negativo\",\n    \"price\": 10000,\n    \"stock\": -3\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "El stock no puede ser negativo segun los criterios de aceptacion."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La operacion responde con errors', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errors).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

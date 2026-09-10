@@ -1,0 +1,37 @@
+$kind: http-request
+description: Busca un usuario existente por id. Cambia la variable 'id' para probar otros casos.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "query GetUser($id: ID!) {\r
+
+      \  user(id: $id) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+    variables: "{\r\n  \"id\": \"1\"\r\n}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La respuesta HTTP es exitosa', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('No contiene errores GraphQL', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+      });
+      pm.test('El usuario existe', () => {
+        const body = pm.response.json();
+        pm.expect(body.data.user).to.not.equal(null);
+      });
+    language: text/javascript
+order: 2000

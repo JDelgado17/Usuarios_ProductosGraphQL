@@ -1,0 +1,14 @@
+$kind: http-request
+description: Verifica que el servidor este arriba y respondiendo antes de probar GraphQL.
+url: "{{baseUrl}}/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El servicio esta activo', () => {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.status).to.eql('ok');
+      });
+    language: text/javascript
+order: 4000

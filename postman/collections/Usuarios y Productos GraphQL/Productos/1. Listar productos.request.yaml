@@ -1,0 +1,41 @@
+$kind: http-request
+description: Devuelve la lista completa de productos (actividad de transferencia).
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "query ListProducts {\r
+
+      \  products {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    description\r
+
+      \    price\r
+
+      \    stock\r
+
+      \  }\r
+
+      }"
+    variables: "{}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La respuesta HTTP es exitosa', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('No contiene errores GraphQL', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+      });
+      pm.test('products es un arreglo', () => {
+        const body = pm.response.json();
+        pm.expect(body.data.products).to.be.an('array');
+      });
+    language: text/javascript
+order: 1000

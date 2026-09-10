@@ -1,0 +1,36 @@
+$kind: http-request
+description: Devuelve la lista completa de usuarios almacenados en MySQL.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "query ListUsers {\r
+
+      \  users {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La respuesta HTTP es exitosa', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('No contiene errores GraphQL', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+      });
+      pm.test('users es un arreglo', () => {
+        const body = pm.response.json();
+        pm.expect(body.data.users).to.be.an('array');
+      });
+    language: text/javascript
+order: 1000

@@ -1,0 +1,50 @@
+$kind: http-request
+description: Crea un producto nuevo y guarda su id en la variable de colección {{productId}}.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation CreateProduct($input: ProductInput!) {\r
+
+      \  createProduct(input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    description\r
+
+      \    price\r
+
+      \    stock\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Monitor 24 pulgadas\",\r
+
+      \    \"description\": \"Panel IPS Full HD\",\r
+
+      \    \"price\": 480000,\r
+
+      \    \"stock\": 10\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El producto fue creado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.createProduct.id).to.exist;
+        pm.collectionVariables.set('productId', body.data.createProduct.id);
+      });
+    language: text/javascript
+order: 3000

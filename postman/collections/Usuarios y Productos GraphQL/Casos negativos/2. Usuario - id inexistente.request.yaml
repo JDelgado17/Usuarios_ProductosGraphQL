@@ -1,0 +1,42 @@
+$kind: http-request
+description: Intenta actualizar un id que no existe en la tabla users.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation UpdateUser($id: ID!, $input: UserInput!) {\r
+
+      \  updateUser(id: $id, input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"id\": \"9999\",\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"No existe\",\r
+
+      \    \"email\": \"noexiste@example.com\"\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La operacion responde con errors', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.exist;
+      });
+    language: text/javascript
+order: 2000

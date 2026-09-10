@@ -1,0 +1,40 @@
+$kind: http-request
+description: El campo name llega con solo espacios; el resolutor debe rechazarlo antes de insertar.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation CreateUser($input: UserInput!) {\r
+
+      \  createUser(input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    email\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"   \",\r
+
+      \    \"email\": \"vacio@example.com\"\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La operacion responde con errors', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.exist;
+      });
+    language: text/javascript
+order: 3000

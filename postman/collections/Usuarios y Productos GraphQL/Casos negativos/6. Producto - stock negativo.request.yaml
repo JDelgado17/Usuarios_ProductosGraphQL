@@ -1,0 +1,46 @@
+$kind: http-request
+description: El stock no puede ser negativo segun los criterios de aceptacion.
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation CreateProduct($input: ProductInput!) {\r
+
+      \  createProduct(input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    price\r
+
+      \    stock\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Producto invalido 2\",\r
+
+      \    \"description\": \"stock negativo\",\r
+
+      \    \"price\": 10000,\r
+
+      \    \"stock\": -3\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('La operacion responde con errors', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.exist;
+      });
+    language: text/javascript
+order: 6000

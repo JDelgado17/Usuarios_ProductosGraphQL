@@ -1,0 +1,51 @@
+$kind: http-request
+description: Usa el id generado en 'Crear producto' (variable {{productId}}).
+url: "{{baseUrl}}/graphql"
+method: POST
+body:
+  type: graphql
+  content:
+    query: "mutation UpdateProduct($id: ID!, $input: ProductInput!) {\r
+
+      \  updateProduct(id: $id, input: $input) {\r
+
+      \    id\r
+
+      \    name\r
+
+      \    description\r
+
+      \    price\r
+
+      \    stock\r
+
+      \  }\r
+
+      }"
+    variables: "{\r
+
+      \  \"id\": \"{{productId}}\",\r
+
+      \  \"input\": {\r
+
+      \    \"name\": \"Monitor 24 pulgadas IPS\",\r
+
+      \    \"description\": \"Panel IPS Full HD 75Hz\",\r
+
+      \    \"price\": 499000,\r
+
+      \    \"stock\": 7\r
+
+      \  }\r
+
+      }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El producto fue actualizado', () => {
+        const body = pm.response.json();
+        pm.expect(body.errors).to.equal(undefined);
+        pm.expect(body.data.updateProduct.stock).to.eql(7);
+      });
+    language: text/javascript
+order: 4000
