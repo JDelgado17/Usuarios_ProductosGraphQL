@@ -6,6 +6,9 @@ de la guía) y **productos** (actividad de transferencia, sección 14).
 Incluye una colección de **Postman** con las 10 operaciones CRUD y 6 pruebas
 de error controladas.
 
+En la guía 4 este backend se conectó con una interfaz web en React + Apollo
+Client, que se encuentra en el repositorio `frontend-usuarios-react`.
+
 ## 1. Requisitos previos
 
 - Node.js LTS y npm
@@ -18,15 +21,22 @@ de error controladas.
 npm install
 ```
 
-Esto instala `express`, `graphql`, `graphql-http`, `mysql2`, `dotenv`, `cors`
+Esto instala `express`, `graphql`, `express-graphql`, `mysql2`, `dotenv`, `cors`
 y, como dependencia de desarrollo, `nodemon`.
 
 ## 3. Base de datos
 
-1. Abre MySQL Workbench, DBeaver o el cliente de línea de comandos.
+1. Abre MySQL Workbench, phpMyAdmin (XAMPP) o el cliente de línea de comandos.
 2. Ejecuta el archivo `database.sql` completo (crea la base `graphql_db`,
    la tabla `users`, la tabla `products` y los datos de prueba).
+   También se puede ejecutar desde la terminal, después de crear el `.env`:
+   ```bash
+   npm run crear-bd
+   ```
 3. Verifica que las dos consultas finales del script devuelvan filas.
+
+> Si la base ya existía de la guía 3, basta con agregar la nueva columna:
+> `ALTER TABLE users ADD COLUMN age INT NULL AFTER email;`
 
 > En ejecuciones posteriores, si vuelves a correr el script, comenta o
 > elimina los bloques `INSERT` para no duplicar el correo de los usuarios.
@@ -65,7 +75,14 @@ Si todo está bien configurado verás en consola:
 Servicio en http://localhost:4000/graphql
 ```
 
-Verifica primero el estado del servicio:
+Al abrir `http://localhost:4000/graphql` en el navegador se carga **GraphiQL**,
+donde se pueden probar las queries y mutations. Por ejemplo:
+
+```graphql
+{ users { id name email age } }
+```
+
+Verifica también el estado del servicio:
 
 ```
 GET http://localhost:4000/health
@@ -82,6 +99,7 @@ usuarios-productos-graphql/
 │   ├── graphql/schema.js       # Tipos, Query y Mutation (users + products)
 │   ├── graphql/resolvers.js    # Lógica CRUD con SQL parametrizado
 │   └── index.js                # Servidor Express y endpoint /graphql
+├── crear-bd.js                 # Ejecuta database.sql desde Node
 ├── .env                        # Variables reales (NO se sube al repo)
 ├── .env.example                # Plantilla sin credenciales reales
 ├── .gitignore
@@ -97,7 +115,7 @@ el contenido de `query` (y `variables`), no la ruta.
 
 | Operación | Tipo | Descripción |
 |---|---|---|
-| `users` | Query | Lista todos los usuarios |
+| `users` | Query | Lista todos los usuarios (id, name, email, age) |
 | `user(id)` | Query | Devuelve un usuario o `null` |
 | `createUser(input)` | Mutation | Inserta y devuelve el usuario |
 | `updateUser(id, input)` | Mutation | Actualiza y devuelve el usuario |
@@ -137,6 +155,29 @@ el contenido de `query` (y `variables`), no la ruta.
 | `Duplicate entry` | Correo ya registrado | Usa otro correo |
 | Puerto ocupado | Otro proceso usa el 4000 | Cambia `PORT` en `.env` o cierra el proceso |
 
-## 10. Licencia
+## 10. Puertos utilizados
+
+| Servicio | Puerto | URL |
+|---|---|---|
+| API GraphQL + GraphiQL | 4000 | http://localhost:4000/graphql |
+| MySQL | 3306 | localhost:3306 |
+| Frontend React (Vite) | 5173 | http://localhost:5173 |
+
+## 11. Cambios para la guía 4 (integración con React)
+
+- CORS habilitado con `app.use(cors())` para aceptar peticiones del frontend,
+  que se ejecuta en otro puerto.
+- El endpoint se sirve con `express-graphql` y `graphiql: true`, para poder
+  comprobar las consultas desde el navegador.
+- Se agregó el campo `age` (edad) al tipo `User`, al input `UserInput` y a la
+  tabla `users`. Es opcional en la API, por lo que la colección de Postman sigue
+  funcionando sin cambios.
+- Mensaje claro cuando se intenta registrar un correo repetido.
+
+## 12. Autores
+
+- Juan David Delgado Muñoz
+
+## 13. Licencia
 
 Uso académico — Tecnologías y Sistemas Web / Móvil.

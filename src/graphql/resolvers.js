@@ -3,8 +3,17 @@ const pool = require('../config/db');
 function cleanUser(input) {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
+  const age = input.age ?? null;
   if (!name || !email) throw new Error('Nombre y correo son obligatorios');
-  return { name, email };
+  if (age !== null && age <= 0) throw new Error('La edad debe ser mayor que cero');
+  return { name, email, age };
+}
+
+function duplicateEmail(error) {
+  if (error.code === 'ER_DUP_ENTRY') {
+    return new Error('Ya existe un usuario registrado con ese correo');
+  }
+  return error;
 }
 
 function cleanProduct(input) {
@@ -29,34 +38,43 @@ const root = {
   // ---------------------------------------------------------------
   users: async () => {
     const [rows] = await pool.execute(
-      'SELECT id, name, email FROM users ORDER BY id'
+      'SELECT id, name, email, age FROM users ORDER BY id'
     );
     return rows;
   },
 
   user: async ({ id }) => {
     const [rows] = await pool.execute(
-      'SELECT id, name, email FROM users WHERE id = ?', [id]
+      'SELECT id, name, email, age FROM users WHERE id = ?', [id]
     );
     return rows[0] || null;
   },
 
   createUser: async ({ input }) => {
-    const { name, email } = cleanUser(input);
-    const [result] = await pool.execute(
-      'INSERT INTO users (name, email) VALUES (?, ?)', [name, email]
-    );
-    return { id: result.insertId, name, email };
+    const { name, email, age } = cleanUser(input);
+    try {
+      const [result] = await pool.execute(
+        'INSERT INTO users (name, email, age) VALUES (?, ?, ?)', [name, email, age]
+      );
+      return { id: result.insertId, name, email, age };
+    } catch (error) {
+      throw duplicateEmail(error);
+    }
   },
 
   updateUser: async ({ id, input }) => {
-    const { name, email } = cleanUser(input);
-    const [result] = await pool.execute(
-      'UPDATE users SET name = ?, email = ? WHERE id = ?',
-      [name, email, id]
-    );
+    const { name, email, age } = cleanUser(input);
+    let result;
+    try {
+      [result] = await pool.execute(
+        'UPDATE users SET name = ?, email = ?, age = ? WHERE id = ?',
+        [name, email, age, id]
+      );
+    } catch (error) {
+      throw duplicateEmail(error);
+    }
     if (!result.affectedRows) throw new Error(`No existe el usuario ${id}`);
-    return { id, name, email };
+    return { id, name, email, age };
   },
 
   deleteUser: async ({ id }) => {

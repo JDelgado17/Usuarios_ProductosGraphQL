@@ -5,11 +5,13 @@ const schema = buildSchema(`
     id: ID!
     name: String!
     email: String!
+    age: Int
   }
 
   input UserInput {
     name: String!
     email: String!
+    age: Int
   }
 
   type Product {

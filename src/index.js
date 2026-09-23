@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { createHandler } = require('graphql-http/lib/use/express');
+const { graphqlHTTP } = require('express-graphql');
 const schema = require('./graphql/schema');
 const rootValue = require('./graphql/resolvers');
 const pool = require('./config/db');
@@ -16,7 +16,12 @@ app.get('/health', (_req, res) =>
   res.json({ status: 'ok', service: 'usuarios-productos-graphql' })
 );
 
-app.all('/graphql', createHandler({ schema, rootValue }));
+// Endpoint GraphQL con GraphiQL habilitado para probar desde el navegador
+app.use('/graphql', graphqlHTTP({
+  schema,
+  rootValue,
+  graphiql: true
+}));
 
 async function start() {
   try {

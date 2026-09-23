@@ -5,19 +5,27 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "crear-bd": "node crear-bd.js"
   },
-  "keywords": ["graphql", "mysql", "express", "postman", "crud"],
+  "keywords": [
+    "graphql",
+    "mysql",
+    "express",
+    "postman",
+    "crud"
+  ],
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "graphql": "^16.9.0",
-    "graphql-http": "^1.22.1",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.10.3",
     "mysql2": "^3.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
-  }
+  },
+  "author": "Juan David Delgado Muñoz"
 }
